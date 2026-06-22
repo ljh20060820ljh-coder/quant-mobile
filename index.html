@@ -50,11 +50,12 @@
 
     <div id="resultScreen" class="hidden w-full max-w-sm space-y-4 animate-in zoom-in duration-300">
         <div class="glass p-8 rounded-3xl text-center border border-emerald-900/50">
-            <div class="text-amber-500 font-bold text-xs uppercase mb-2 tracking-widest">💰 Expected Return</div>
-            <div id="output" class="text-5xl font-black text-white my-4"></div>
+            <div class="text-amber-500 font-bold text-xs uppercase mb-2 tracking-widest">💰 期望收益率 (EV)</div>
+            <div id="output" class="text-5xl font-black text-white my-2"></div>
+            <div id="kellyOutput" class="text-lg font-bold text-blue-400 mb-4 bg-blue-900/20 p-2 rounded-lg"></div>
             <div id="aiReason" class="text-sm text-left text-slate-300 leading-relaxed mb-6 bg-slate-900/50 p-4 rounded-xl border border-slate-700 max-h-[200px] overflow-y-auto"></div>
             <div id="verdict" class="text-2xl font-black p-4 rounded-2xl border border-slate-700"></div>
-            <button onclick="switchScreen('input')" class="w-full mt-6 p-4 rounded-xl bg-slate-800 hover:bg-slate-700 transition">返回重新核算</button>
+            <button onclick="switchScreen('input')" class="w-full mt-4 p-4 rounded-xl bg-slate-800 hover:bg-slate-700 transition">返回重新核算</button>
         </div>
     </div>
 
@@ -84,20 +85,19 @@
             const pA = (k, l) => (Math.exp(-l) * Math.pow(l, k)) / fact(k);
             
             let winProb = 0, pushProb = 0;
-            // 严密的盘口映射逻辑
             for (let a = 0; a <= 6; a++) {
                 for (let b = 0; b <= 6; b++) {
                     const p = pA(a, lambda) * pA(b, mu);
-                    if ((market === '1x2_home' && a > b) || (market === '1x2_draw' && a === b) || (market === '1x2_away' && a < b)) winProb += p;
-                    else if (market === 'ah_-0.5' && a > b) winProb += p;
-                    else if (market === 'ah_-1.0') { if (a - b > 1) winProb += p; else if (a - b === 1) pushProb += p; }
-                    else if (market === 'ah_-1.5' && a - b >= 2) winProb += p;
-                    else if (market === 'ou_2.5_over' && a + b > 2.5) winProb += p;
-                    else if (market === 'ou_2.5_under' && a + b < 2.5) winProb += p;
-                    else if (market === 'ou_3.5_over' && a + b > 3.5) winProb += p;
-                    else if (market === 'btts_yes' && a > 0 && b > 0) winProb += p;
-                    else if (market === 'score_1_0' && (a==1&&b==0 || a==2&&b==0 || a==2&&b==1 || a==3&&b==0)) winProb += p;
-                    else if (market === 'score_0_1' && (a==0&&b==1 || a==0&&b==2 || a==1&&b==2 || a==0&&b==3)) winProb += p;
+                    if ((market === '1x2_home' && a > b) || (market === '1x2_draw' && a === b) || (market === '1x2_away' && a < b) ||
+                        (market === 'ah_-0.5' && a > b) || (market === 'ah_-1.0') || (market === 'ah_-1.5' && a - b >= 2) ||
+                        (market === 'ou_2.5_over' && a + b > 2.5) || (market === 'ou_2.5_under' && a + b < 2.5) || (market === 'ou_3.5_over' && a + b > 3.5) ||
+                        (market === 'btts_yes' && a > 0 && b > 0) ||
+                        (market === 'score_1_0' && (a==1&&b==0 || a==2&&b==0 || a==2&&b==1 || a==3&&b==0)) ||
+                        (market === 'score_0_1' && (a==0&&b==1 || a==0&&b==2 || a==1&&b==2 || a==0&&b==3))) {
+                        if (market === 'ah_-1.0' && a - b === 1) pushProb += p;
+                        else if (market === 'ah_-1.0' && a - b > 1) winProb += p;
+                        else winProb += p;
+                    }
                 }
             }
 
@@ -108,16 +108,19 @@
                     headers: {"Content-Type":"application/json", "Authorization": `Bearer ${key}`},
                     body: JSON.stringify({
                         model: "deepseek-chat", 
-                        messages: [{role: "user", content: `深度分析 ${TEAM_NAMES[teamA]} vs ${TEAM_NAMES[teamB]}，盘口:${market}。请从战术克制、伤停战意分析，字数>200字，必须返回纯JSON：{"correction": 0.05, "reason": "报告内容"}`}]
+                        messages: [{role: "user", content: `深度分析 ${TEAM_NAMES[teamA]} vs ${TEAM_NAMES[teamB]}，盘口:${market}。维度：近期状态、战术克制、战意。要求：不少于200字，必须返回纯JSON：{"correction": 0.05, "reason": "在此写入详细报告"}`}]
                     })
                 });
                 const d = await response.json();
-                let content = d.choices[0].message.content.replace(/```json/g, "").replace(/```/g, "").trim();
-                aiRes = JSON.parse(content);
+                aiRes = JSON.parse(d.choices[0].message.content.replace(/```json/g, "").replace(/```/g, "").replace(/\n/g, "").trim());
             } catch(e) { aiRes = {correction: 0, reason: "AI API错误，已切换至基础模型。"}; }
             
             const ev = ((winProb + aiRes.correction) * odds) + (pushProb * 1.0) - 1;
+            // 凯利公式计算 (使用 1/4 凯利稳健倍数)
+            const kellyBet = ev > 0 ? ((winProb + aiRes.correction) * odds - 1) / (odds - 1) * 0.25 : 0;
+            
             document.getElementById('output').innerText = (ev > 0 ? "+" : "") + (ev*100).toFixed(2) + "%";
+            document.getElementById('kellyOutput').innerText = ev > 0 ? `建议投入仓位: ${(kellyBet*100).toFixed(1)}%` : "不建议操作";
             document.getElementById('aiReason').innerText = aiRes.reason;
             document.getElementById('verdict').innerText = ev > 0 ? "✅ 建仓建议" : "🚫 避险建议";
             document.getElementById('verdict').className = ev > 0 ? "text-emerald-400 border border-emerald-900" : "text-rose-400 border border-rose-900";
