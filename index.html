@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>量化核心终端 V5.1</title>
+    <title>量化核心终端 V5.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-950 text-slate-200 p-4">
     <div class="max-w-md mx-auto space-y-4">
-        <h1 class="text-xl font-bold text-center text-blue-500">⚡ 战术核算终端 V5.1</h1>
+        <h1 class="text-xl font-bold text-center text-blue-500">⚡ 战术核算终端 V5.2 (中立场)</h1>
         
         <div class="bg-slate-900 p-4 rounded-xl border border-slate-700">
-            <input type="password" id="apiKey" placeholder="输入 DeepSeek API Key (自动保存)" class="w-full bg-slate-800 p-2 mb-4 rounded border border-slate-600 text-sm">
+            <input type="password" id="apiKey" placeholder="输入 DeepSeek API Key" class="w-full bg-slate-800 p-2 mb-4 rounded border border-slate-600 text-sm">
             
             <div class="grid grid-cols-2 gap-2 mb-2">
                 <select id="teamA" class="bg-slate-800 p-2 rounded border border-slate-600 text-sm"></select>
@@ -19,9 +19,14 @@
             </div>
             
             <select id="marketType" class="w-full bg-slate-800 p-2 mb-2 rounded border border-slate-600 text-sm">
-                <option value="winA">全场独赢 - 主胜</option>
-                <option value="ah_-1">让球 - 主队 [-1]</option>
-                <option value="ou_2.5_over">大小 - [大 2.5]</option>
+                <option value="winA">全场独赢 - 主队(左)胜</option>
+                <option value="winD">全场独赢 - 和局</option>
+                <option value="winB">全场独赢 - 客队(右)胜</option>
+                <option value="ah_-0.5">让球盘 - 主队 [-0.5]</option>
+                <option value="ah_-1">让球盘 - 主队 [-1]</option>
+                <option value="ah_-1.5">让球盘 - 主队 [-1.5]</option>
+                <option value="ou_2.5_over">大小球 - [大 2.5]</option>
+                <option value="ou_2.5_under">大小球 - [小 2.5]</option>
             </select>
             
             <input type="number" id="odds" placeholder="输入 APP 实时赔率" class="w-full bg-slate-800 p-2 mb-4 rounded border border-slate-600">
@@ -35,23 +40,18 @@
     </div>
 
     <script>
-        // 1. 初始化数据库与自动保存 Key
-        const RATINGS = {"argentina": 1976, "france": 2009, "spain": 2010, "brazil": 1955, "england": 1993, "portugal": 1945, "netherlands": 1894, "germany": 1926, "belgium": 1878, "italy": 1901, "colombia": 1878, "uruguay": 1831, "croatia": 1852, "morocco": 1874, "switzerland": 1812, "usa": 1826, "mexico": 1834, "japan": 1825, "senegal": 1848, "denmark": 1795, "ecuador": 1829, "australia": 1772, "south-korea": 1760, "iran": 1747, "poland": 1731, "canada": 1740, "serbia": 1714, "wales": 1688, "ghana": 1659, "tunisia": 1680, "ivory-coast": 1732, "nigeria": 1671, "saudi-arabia": 1657, "qatar": 1592, "egypt": 1695, "algeria": 1704, "scotland": 1663, "cameroon": 1633, "paraguay": 1681, "venezuela": 1625, "chile": 1616, "peru": 1612, "czech-republic": 1651, "bosnia-and-herzegovina": 1602, "south-africa": 1591, "new-zealand": 1591, "panama": 1615, "jamaica": 1514, "honduras": 1497, "jordan": 1548, "haiti": 1537, "el-salvador": 1438, "trinidad-and-tobago": 1429, "guatemala": 1416, "norway": 1880, "sweden": 1752, "turkey": 1731, "austria": 1718, "iraq": 1599, "uzbekistan": 1633, "cape-verde": 1599, "dr-congo": 1650, "curacao": 1548};
+        const TEAM_NAMES = {"argentina":"阿根廷","france":"法国","spain":"西班牙","brazil":"巴西","england":"英格兰","portugal":"葡萄牙","netherlands":"荷兰","germany":"德国","belgium":"比利时","italy":"意大利","colombia":"哥伦比亚","uruguay":"乌拉圭","croatia":"克罗地亚","morocco":"摩洛哥","switzerland":"瑞士","usa":"美国","mexico":"墨西哥","japan":"日本","senegal":"塞内加尔","denmark":"丹麦","ecuador":"厄瓜多尔","australia":"澳大利亚","south-korea":"韩国","iran":"伊朗","poland":"波兰","canada":"加拿大","serbia":"塞尔维亚","wales":"威尔士","ghana":"加纳","tunisia":"突尼斯","ivory-coast":"科特迪瓦","nigeria":"尼日利亚","saudi-arabia":"沙特阿拉伯","qatar":"卡塔尔","egypt":"埃及","algeria":"阿尔及利亚","scotland":"苏格兰","cameroon":"喀麦隆","paraguay":"巴拉圭","venezuela":"委内瑞拉","chile":"智利","peru":"秘鲁","czech-republic":"捷克","bosnia-and-herzegovina":"波黑","south-africa":"南非","new-zealand":"新西兰","panama":"巴拿马","jamaica":"牙买加","honduras":"洪都拉斯","jordan":"约旦","haiti":"海地","el-salvador":"萨尔瓦多","trinidad-and-tobago":"特立尼达和多巴哥","guatemala":"危地马拉","norway":"挪威","sweden":"瑞典","turkey":"土耳其","austria":"奥地利","iraq":"伊拉克","uzbekistan":"乌兹别克斯坦","cape-verde":"佛得角","dr-congo":"民主刚果","curacao":"库拉索"};
+        const RATINGS = {"argentina":1976,"france":2009,"spain":2010,"brazil":1955,"england":1993,"portugal":1945,"netherlands":1894,"germany":1926,"belgium":1878,"italy":1901,"colombia":1878,"uruguay":1831,"croatia":1852,"morocco":1874,"switzerland":1812,"usa":1826,"mexico":1834,"japan":1825,"senegal":1848,"denmark":1795,"ecuador":1829,"australia":1772,"south-korea":1760,"iran":1747,"poland":1731,"canada":1740,"serbia":1714,"wales":1688,"ghana":1659,"tunisia":1680,"ivory-coast":1732,"nigeria":1671,"saudi-arabia":1657,"qatar":1592,"egypt":1695,"algeria":1704,"scotland":1663,"cameroon":1633,"paraguay":1681,"venezuela":1625,"chile":1616,"peru":1612,"czech-republic":1651,"bosnia-and-herzegovina":1602,"south-africa":1591,"new-zealand":1591,"panama":1615,"jamaica":1514,"honduras":1497,"jordan":1548,"haiti":1537,"el-salvador":1438,"trinidad-and-tobago":1429,"guatemala":1416,"norway":1880,"sweden":1752,"turkey":1731,"austria":1718,"iraq":1599,"uzbekistan":1633,"cape-verde":1599,"dr-congo":1650,"curacao":1548};
 
-        // 自动读取/保存 Key
-        const keyInput = document.getElementById('apiKey');
-        keyInput.value = localStorage.getItem('DS_KEY') || '';
-        keyInput.oninput = () => localStorage.setItem('DS_KEY', keyInput.value);
-
-        // 初始化下拉菜单
         const selectA = document.getElementById('teamA');
         const selectB = document.getElementById('teamB');
         Object.keys(RATINGS).sort().forEach(t => {
-            selectA.innerHTML += `<option value="${t}">${t}</option>`;
-            selectB.innerHTML += `<option value="${t}">${t}</option>`;
+            const name = TEAM_NAMES[t] || t;
+            selectA.innerHTML += `<option value="${t}">${name}</option>`;
+            selectB.innerHTML += `<option value="${t}">${name}</option>`;
         });
 
-        // 数学核心
+        // 核心数学引擎 (已移除 HomeBonus)
         function poissonPmf(k, lambda) {
             let p = Math.exp(-lambda);
             for (let i = 1; i <= k; i++) p *= lambda / i;
@@ -59,41 +59,47 @@
         }
 
         async function runTerminal() {
-            const key = localStorage.getItem('DS_KEY');
+            const key = document.getElementById('apiKey').value;
             if(!key) return alert("请先输入 DeepSeek API Key");
-
+            
             const teamA = document.getElementById('teamA').value;
             const teamB = document.getElementById('teamB').value;
             const market = document.getElementById('marketType').value;
             const odds = parseFloat(document.getElementById('odds').value);
             
-            // 计算逻辑
+            // 计算逻辑：强制设为中立场 (hb=0)
             const rA = RATINGS[teamA], rB = RATINGS[teamB];
-            const lambda = 1.35 + ((rA - rB) / 400);
-            const mu = 1.35 + ((rB - rA) / 400);
+            const lambda = 1.35 + ((rA - rB) / 400); // 主队进球期望
+            const mu = 1.35 + ((rB - rA) / 400);     // 客队进球期望
             
             let winProb = 0;
             for (let a = 0; a <= 8; a++) {
                 for (let b = 0; b <= 8; b++) {
                     const p = poissonPmf(a, lambda) * poissonPmf(b, mu);
+                    // 盘口判定逻辑
                     if (market === 'winA' && a > b) winProb += p;
+                    else if (market === 'winD' && a === b) winProb += p;
+                    else if (market === 'winB' && a < b) winProb += p;
+                    else if (market === 'ah_-0.5' && a > b) winProb += p;
                     else if (market === 'ah_-1' && (a - b) >= 2) winProb += p;
+                    else if (market === 'ah_-1.5' && (a - b) >= 2) winProb += p;
                     else if (market === 'ou_2.5_over' && (a + b) >= 3) winProb += p;
+                    else if (market === 'ou_2.5_under' && (a + b) <= 2) winProb += p;
                 }
             }
 
-            // AI 获取
             const aiResponse = await callDeepSeek(teamA, teamB, key);
             const finalProb = winProb + aiResponse;
             const ev = (finalProb * odds) - 1;
             
             document.getElementById('resultBox').classList.remove('hidden');
             document.getElementById('output').innerText = `
->>> 数学胜率: ${(winProb*100).toFixed(1)}%
->>> AI 修正值: ${(aiResponse*100).toFixed(1)}%
->>> 期望值(EV): ${ev.toFixed(4)}
+>>> 数学模型胜率: ${(winProb*100).toFixed(1)}%
+>>> AI 情报修正: ${(aiResponse*100).toFixed(1)}%
+>>> 综合胜率: ${(finalProb*100).toFixed(1)}%
+>>> EV 期望值: ${ev.toFixed(4)}
 ---------------------------
-${ev > 0 ? "✅ 推荐：建仓" : "🚫 推荐：避险"}`;
+${ev > 0 ? "✅ 推荐：可博弈 (建仓)" : "🚫 推荐：放弃 (避险)"}`;
         }
 
         async function callDeepSeek(a, b, key) {
@@ -103,7 +109,7 @@ ${ev > 0 ? "✅ 推荐：建仓" : "🚫 推荐：避险"}`;
                     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` },
                     body: JSON.stringify({
                         model: "deepseek-chat",
-                        messages: [{role: "user", content: `预测${a} vs ${b}的比赛情报修正值(-0.1到0.1)，只返回小数`}]
+                        messages: [{role: "user", content: `分析${a} vs ${b}的最新情报修正值(小数)，仅返回-0.1到0.1的浮点数，不要字符`}]
                     })
                 });
                 const data = await response.json();
