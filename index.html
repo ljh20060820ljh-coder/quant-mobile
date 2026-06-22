@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>量化交易移动中枢 V4.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0f172a; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .glass-panel { background: rgba(30, 41, 59, 0.7); border: 1px solid #334155; backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="p-4 antialiased">
+
+    <div class="max-w-md mx-auto space-y-6">
+        <div class="text-center space-y-1 mt-4">
+            <h1 class="text-2xl font-bold text-blue-400">⚡ 盘口雷达中枢 V4.0</h1>
+            <p class="text-sm text-slate-400">泊松矩阵全盘口解析系统</p>
+        </div>
+
+        <div class="glass-panel p-5 rounded-xl space-y-4 shadow-lg">
+            <h2 class="text-lg font-semibold border-b border-slate-600 pb-2">📊 模型基准参数输入</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">主队预期进球 (ExpG)</label>
+                    <input type="number" id="goalA" step="0.01" value="2.00" class="w-full bg-slate-800 text-white border border-slate-600 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">客队预期进球 (ExpG)</label>
+                    <input type="number" id="goalB" step="0.01" value="0.71" class="w-full bg-slate-800 text-white border border-slate-600 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none transition">
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-xs text-slate-400 mb-1">目标盘口项目</label>
+                <select id="marketType" class="w-full bg-slate-800 text-white border border-slate-600 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option value="home_win">全场独赢 - 主队胜</option>
+                    <option value="home_minus_1">全场让球 - 主队 [-1]</option>
+                    <option value="over_2_5">全场大小 - [大 2.5]</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs text-slate-400 mb-1">APP 实时赔率 (Odds)</label>
+                <input type="number" id="odds" step="0.01" value="1.85" class="w-full bg-slate-800 text-white border border-slate-600 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none text-lg font-bold">
+            </div>
+
+            <button onclick="calculateStrategy()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg shadow-md transition-all active:scale-95 mt-2">
+                执行核算 (Execute)
+            </button>
+        </div>
+
+        <div id="resultBox" class="hidden glass-panel p-5 rounded-xl space-y-3 shadow-lg transition-all duration-300">
+            <h2 class="text-lg font-semibold border-b border-slate-600 pb-2">🎯 行动指令报告</h2>
+            
+            <div class="flex justify-between items-center text-sm">
+                <span class="text-slate-400">模型真实胜率:</span>
+                <span id="winProb" class="font-mono text-lg font-bold text-white">0%</span>
+            </div>
+            
+            <div class="flex justify-between items-center text-sm">
+                <span class="text-slate-400">期望值 (EV):</span>
+                <span id="evValue" class="font-mono text-lg font-bold">0</span>
+            </div>
+
+            <div id="actionAlert" class="mt-4 p-3 rounded-lg text-center font-bold">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // 数学工具：阶乘与泊松分布
+        const fact = n => n <= 1 ? 1 : n * fact(n - 1);
+        const poisson = (k, lambda) => (Math.pow(lambda, k) * Math.exp(-lambda)) / fact(k);
+
+        function calculateStrategy() {
+            const lambdaA = parseFloat(document.getElementById('goalA').value);
+            const lambdaB = parseFloat(document.getElementById('goalB').value);
+            const odds = parseFloat(document.getElementById('odds').value);
+            const market = document.getElementById('marketType').value;
+            
+            let winProb = 0;
+            let drawProb = 0; // 用于处理走水的情况
+
+            // 计算 0-5 个进球的概率矩阵 (覆盖 99% 的情况)
+            for(let i=0; i<=5; i++) {
+                for(let j=0; j<=5; j++) {
+                    let p = poisson(i, lambdaA) * poisson(j, lambdaB);
+                    
+                    if(market === 'home_win') {
+                        if(i > j) winProb += p;
+                    } 
+                    else if(market === 'home_minus_1') {
+                        if(i - j >= 2) winProb += p;       // 赢两球全赢
+                        else if(i - j === 1) drawProb += p; // 赢一球走水
+                    }
+                    else if(market === 'over_2_5') {
+                        if(i + j >= 3) winProb += p;
+                    }
+                }
+            }
+
+            // 核心期望值计算 (包含走水退本金逻辑)
+            let ev = 0;
+            if(market === 'home_minus_1') {
+                ev = (winProb * odds) + (drawProb * 1.0) - 1; 
+                winProb = winProb / (1 - drawProb); // 剔除走水情况后的真实胜率
+            } else {
+                ev = (winProb * odds) - 1;
+            }
+
+            // 渲染 UI
+            document.getElementById('resultBox').classList.remove('hidden');
+            document.getElementById('winProb').innerText = (winProb * 100).toFixed(1) + '%';
+            
+            const evEl = document.getElementById('evValue');
+            evEl.innerText = (ev > 0 ? '+' : '') + ev.toFixed(4);
+            evEl.className = `font-mono text-lg font-bold ${ev > 0 ? 'text-green-400' : 'text-red-400'}`;
+
+            const alertEl = document.getElementById('actionAlert');
+            if(ev <= 0) {
+                alertEl.className = "mt-4 p-3 rounded-lg text-center font-bold bg-red-900/50 text-red-300 border border-red-700";
+                alertEl.innerHTML = "🚫 负期望陷阱，坚决放弃";
+            } else {
+                // 凯利公式
+                const b = odds - 1;
+                const q = 1 - winProb;
+                const kelly = ((b * winProb) - q) / b;
+                const safeKelly = Math.max((kelly / 4) * 100, 0); // 1/4 凯利稳健仓位
+
+                alertEl.className = "mt-4 p-3 rounded-lg text-center font-bold bg-green-900/50 text-green-300 border border-green-700";
+                alertEl.innerHTML = `✅ 满足建仓条件<br><span class="text-xs font-normal text-green-100 opacity-80 mt-1 block">建议投入闲置资金的 ${safeKelly.toFixed(1)}% - ${(safeKelly*1.5).toFixed(1)}%</span>`;
+            }
+        }
+    </script>
+</body>
+</html>
