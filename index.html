@@ -39,36 +39,18 @@
                         <option value="1x2_draw">全场独赢 - 和局 (平)</option>
                         <option value="1x2_away">全场独赢 - 客队胜</option>
                     </optgroup>
-
                     <optgroup label="⚖️ 全场让球 (Asian Handicap)">
-                        <option value="ah_-0.25">全场让球 - 主队 [-0/0.5] (平局输一半)</option>
                         <option value="ah_-0.5">全场让球 - 主队 [-0.5]</option>
-                        <option value="ah_-0.75">全场让球 - 主队 [-0.5/1] (赢一球赢一半)</option>
                         <option value="ah_-1">全场让球 - 主队 [-1] (赢一球退本)</option>
-                        <option value="ah_-1.25">全场让球 - 主队 [-1/1.5] (赢一球输一半)</option>
                         <option value="ah_-1.5">全场让球 - 主队 [-1.5]</option>
-                        <option value="ah_+0.5">全场让球 - 客队 [+0.5] (即主队让负)</option>
-                        <option value="ah_+1">全场让球 - 客队 [+1] (输一球退本)</option>
                     </optgroup>
-
                     <optgroup label="📈 全场大小 (Over/Under)">
-                        <option value="ou_2.25_over">全场大小 - [大 2/2.5] (进2球输一半)</option>
-                        <option value="ou_2.5_over" selected>全场大小 - [大 2.5]</option>
-                        <option value="ou_2.75_over">全场大小 - [大 2.5/3] (进3球赢一半)</option>
-                        <option value="ou_3_over">全场大小 - [大 3] (进3球退本)</option>
-                        <option value="ou_2.25_under">全场大小 - [小 2/2.5] (进2球赢一半)</option>
+                        <option value="ou_2.5_over">全场大小 - [大 2.5]</option>
                         <option value="ou_2.5_under">全场大小 - [小 2.5]</option>
-                        <option value="ou_2.75_under">全场大小 - [小 2.5/3] (进3球输一半)</option>
                     </optgroup>
-
                     <optgroup label="🎯 全场波胆 (高赔狙击)">
-                        <option value="cs_0_0">波胆 - [0-0]</option>
                         <option value="cs_1_0">波胆 - [1-0]</option>
-                        <option value="cs_0_1">波胆 - [0-1]</option>
                         <option value="cs_1_1">波胆 - [1-1]</option>
-                        <option value="cs_2_0">波胆 - [2-0]</option>
-                        <option value="cs_2_1">波胆 - [2-1]</option>
-                        <option value="cs_3_0">波胆 - [3-0]</option>
                     </optgroup>
                 </select>
             </div>
@@ -107,39 +89,19 @@
             const odds = parseFloat(document.getElementById('odds').value);
             const market = document.getElementById('marketType').value;
             
-            let winProb = 0, drawProb = 0, halfWinProb = 0, halfLoseProb = 0;
-
+            let winProb = 0, drawProb = 0;
             for(let i=0; i<=7; i++) {
                 for(let j=0; j<=7; j++) {
                     let p = poisson(i, lambdaA) * poisson(j, lambdaB);
                     let diff = i - j;
                     let total = i + j;
                     
-                    // 独赢逻辑
                     if(market === '1x2_home' && diff > 0) winProb += p;
-                    else if(market === '1x2_draw' && diff === 0) winProb += p;
-                    else if(market === '1x2_away' && diff < 0) winProb += p;
-                    
-                    // 让球附加盘逻辑
-                    else if(market === 'ah_-0.25') { if(diff > 0) winProb += p; else if(diff === 0) halfLoseProb += p; }
-                    else if(market === 'ah_-0.5') { if(diff > 0) winProb += p; }
-                    else if(market === 'ah_-0.75') { if(diff > 1) winProb += p; else if(diff === 1) halfWinProb += p; }
-                    else if(market === 'ah_-1') { if(diff > 1) winProb += p; else if(diff === 1) drawProb += p; }
-                    else if(market === 'ah_-1.25') { if(diff > 1) winProb += p; else if(diff === 1) halfLoseProb += p; }
-                    else if(market === 'ah_-1.5') { if(diff > 1) winProb += p; }
-                    else if(market === 'ah_+0.5') { if(diff <= 0) winProb += p; }
-                    else if(market === 'ah_+1') { if(diff <= -1) winProb += p; else if(diff === 0) drawProb += p; }
-                    
-                    // 大小球附加盘逻辑
-                    else if(market === 'ou_2.25_over') { if(total >= 3) winProb += p; else if(total === 2) halfLoseProb += p; }
-                    else if(market === 'ou_2.5_over') { if(total >= 3) winProb += p; }
-                    else if(market === 'ou_2.75_over') { if(total >= 4) winProb += p; else if(total === 3) halfWinProb += p; }
-                    else if(market === 'ou_3_over') { if(total >= 4) winProb += p; else if(total === 3) drawProb += p; }
-                    else if(market === 'ou_2.25_under') { if(total <= 1) winProb += p; else if(total === 2) halfWinProb += p; }
-                    else if(market === 'ou_2.5_under') { if(total <= 2) winProb += p; }
-                    else if(market === 'ou_2.75_under') { if(total <= 2) winProb += p; else if(total === 3) halfLoseProb += p; }
-                    
-                    // 波胆逻辑
+                    else if(market === 'ah_-0.5' && diff >= 1) winProb += p;
+                    else if(market === 'ah_-1') { if(diff >= 2) winProb += p; else if(diff === 1) drawProb += p; }
+                    else if(market === 'ah_-1.5' && diff >= 2) winProb += p;
+                    else if(market === 'ou_2.5_over' && total >= 3) winProb += p;
+                    else if(market === 'ou_2.5_under' && total <= 2) winProb += p;
                     else if(market.startsWith('cs_')) {
                         let parts = market.split('_');
                         if(i === parseInt(parts[1]) && j === parseInt(parts[2])) winProb += p;
@@ -147,48 +109,20 @@
                 }
             }
 
-            // 精准 EV 核算体系
-            // EV = 全赢收益 + 赢一半收益 + 走水退本 + 输一半退半本 - 总投入
-            let ev = (winProb * odds) 
-                   + (halfWinProb * (1 + (odds - 1) / 2)) 
-                   + (drawProb * 1.0) 
-                   + (halfLoseProb * 0.5) 
-                   - 1;
-
-            // 为凯利公式计算一个折算的有效胜率
-            let effectiveWinProb = winProb + (halfWinProb * 0.5) + (drawProb * 0.5);
-
+            let ev = (market === 'ah_-1' || market.startsWith('ou_')) ? (winProb * odds) + (drawProb * 1.0) - 1 : (winProb * odds) - 1;
+            
             document.getElementById('resultBox').classList.remove('hidden');
-            
-            // 如果是波胆，显示绝对概率；如果是附加盘，显示全赢概率
-            let probText = (winProb * 100).toFixed(2) + '%';
-            if(halfWinProb > 0 || drawProb > 0 || halfLoseProb > 0) {
-                probText += ` (另含防守概率 ${( (halfWinProb+drawProb+halfLoseProb)*100 ).toFixed(1)}%)`;
-            }
-            document.getElementById('winProb').innerText = probText;
-            
+            document.getElementById('winProb').innerText = (winProb * 100).toFixed(1) + '%';
             const evEl = document.getElementById('evValue');
             evEl.innerText = (ev > 0 ? '+' : '') + ev.toFixed(4);
             evEl.className = `font-mono text-lg font-bold ${ev > 0 ? 'text-green-400' : 'text-red-400'}`;
-
             const alertEl = document.getElementById('actionAlert');
             if(ev <= 0) {
                 alertEl.className = "mt-4 p-3 rounded-lg font-bold bg-red-900/50 text-red-300 border border-red-700";
-                alertEl.innerHTML = "🚫 负期望陷阱盘<br><span class="font-normal opacity-80">风险与赔率严重倒挂，坚决不碰！</span>";
+                alertEl.innerHTML = '🚫 负期望陷阱盘<br><span class=\'font-normal opacity-80\'>风险与赔率严重倒挂，坚决不碰！</span>';
             } else {
-                let b = odds - 1; let q = 1 - effectiveWinProb;
-                let kelly = ((b * effectiveWinProb) - q) / b;
-                
-                if (market.startsWith('cs_')) {
-                    // 波胆策略：极小仓位狙击
-                    alertEl.className = "mt-4 p-3 rounded-lg font-bold bg-purple-900/50 text-purple-300 border border-purple-700";
-                    alertEl.innerHTML = `💸 高赔率彩票单<br><span class="text-xs font-normal text-purple-100 opacity-80 mt-1 block">建议使用极小资金（如 10~20 元）进行娱乐狙击</span>`;
-                } else {
-                    // 常规策略：半凯利防守
-                    let safeKelly = Math.max((kelly / 2) * 100, 0.5); 
-                    alertEl.className = "mt-4 p-3 rounded-lg font-bold bg-green-900/50 text-green-300 border border-green-700";
-                    alertEl.innerHTML = `✅ 满足建仓条件<br><span class="text-xs font-normal text-green-100 opacity-80 mt-1 block">建议投入闲置本金的 ${safeKelly.toFixed(1)}%</span>`;
-                }
+                alertEl.className = "mt-4 p-3 rounded-lg font-bold bg-green-900/50 text-green-300 border border-green-700";
+                alertEl.innerHTML = '✅ 满足建仓条件<br><span class=\'font-normal opacity-80\'>建议投入闲置本金进行小额博弈</span>';
             }
         }
     </script>
