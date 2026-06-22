@@ -6,46 +6,40 @@
     <title>Quant-Elite Terminal PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { 
-            background: radial-gradient(circle at top right, #064e3b, #020617);
-            font-family: 'Segoe UI', system-ui, sans-serif;
-        }
-        .glass { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px); border: 1px solid #10b981; }
-        .gold-glow { color: #fbbf24; text-shadow: 0 0 15px rgba(251, 191, 36, 0.4); }
-        .emerald-glow { color: #10b981; text-shadow: 0 0 10px rgba(16, 185, 129, 0.3); }
+        body { background: radial-gradient(circle at top right, #064e3b, #020617); font-family: 'Segoe UI', system-ui, sans-serif; }
+        .glass { background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(20px); border: 1px solid #10b981; }
+        .gold-glow { color: #fbbf24; text-shadow: 0 0 15px rgba(251, 191, 36, 0.5); }
     </style>
 </head>
-<body class="text-slate-100 min-h-screen flex flex-col items-center p-4">
+<body class="text-slate-100 min-h-screen p-4 flex flex-col items-center justify-center">
 
     <div id="inputScreen" class="w-full max-w-sm space-y-6">
         <div class="text-center pt-8">
-            <h1 class="text-4xl font-black italic gold-glow">⚽ PRO TERMINAL</h1>
-            <p class="text-emerald-500 font-bold tracking-widest text-xs mt-2">FINANCIAL QUANT SYSTEM</p>
+            <h1 class="text-4xl font-black italic gold-glow">ELITE TERMINAL</h1>
+            <p class="text-emerald-500 font-bold tracking-widest text-xs mt-2">v10.1 DEEP ANALYSIS EDITION</p>
         </div>
 
-        <div class="glass p-6 rounded-3xl shadow-2xl space-y-4">
-            <input type="password" id="apiKey" placeholder="🔑 API Key" class="w-full bg-slate-900/50 p-3 rounded-xl border border-slate-700 text-sm focus:border-emerald-500 outline-none">
+        <div class="glass p-6 rounded-3xl shadow-2xl space-y-4 border border-emerald-800">
+            <input type="password" id="apiKey" placeholder="🔑 输入 API Key" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-sm focus:border-emerald-500 outline-none">
             <div class="grid grid-cols-2 gap-2">
-                <select id="teamA" class="bg-slate-900/50 p-3 rounded-xl border border-slate-700 text-sm"></select>
-                <select id="teamB" class="bg-slate-900/50 p-3 rounded-xl border border-slate-700 text-sm"></select>
+                <select id="teamA" class="bg-slate-900 p-3 rounded-xl border border-slate-700 text-sm"></select>
+                <select id="teamB" class="bg-slate-900 p-3 rounded-xl border border-slate-700 text-sm"></select>
             </div>
-            
-            <select id="marketType" class="w-full bg-slate-900/50 p-3 rounded-xl border border-slate-700 text-sm">
+            <select id="marketType" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-sm">
                 <option value="1x2_home">全场主胜</option>
                 <option value="ah_-1.0">让球盘 [-1.0]</option>
                 <option value="ou_2.5_over">大小盘 [大 2.5]</option>
             </select>
-            
-            <input type="number" id="odds" step="0.01" placeholder="💰 赔率" class="w-full bg-slate-900/50 p-3 rounded-xl border border-slate-700 font-bold text-lg text-amber-400">
-            <button onclick="runTerminal()" id="calcBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 p-4 rounded-xl font-black text-white shadow-lg transition active:scale-95">执行精密核算</button>
+            <input type="number" id="odds" step="0.01" placeholder="💰 实时赔率" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 font-bold text-lg text-amber-400">
+            <button onclick="runTerminal()" id="calcBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 p-4 rounded-xl font-black text-white shadow-lg transition transform active:scale-95">开始深度核算</button>
         </div>
     </div>
 
     <div id="resultScreen" class="hidden w-full max-w-sm space-y-4 animate-in zoom-in duration-300">
-        <div class="glass p-8 rounded-3xl text-center border border-emerald-900/50">
-            <div class="text-amber-500 font-bold text-xs uppercase mb-2 tracking-widest">💰 Expected Return</div>
-            <div id="output" class="text-6xl font-black text-white my-4 emerald-glow"></div>
-            <div id="aiReason" class="text-sm text-slate-400 italic mb-6 bg-black/30 p-4 rounded-xl border border-slate-800"></div>
+        <div class="glass p-8 rounded-3xl text-center shadow-2xl border border-emerald-800">
+            <div class="text-emerald-500 font-bold text-xs uppercase mb-2">深度核算结果</div>
+            <div id="output" class="text-5xl font-black text-white my-4"></div>
+            <div id="aiReason" class="text-sm text-left text-slate-300 leading-relaxed mb-6 bg-slate-900/50 p-4 rounded-xl border border-slate-700"></div>
             <div id="verdict" class="text-2xl font-black p-4 rounded-2xl border border-slate-700"></div>
             <button onclick="switchScreen('input')" class="w-full mt-6 p-4 rounded-xl bg-slate-800 hover:bg-slate-700 transition">返回重新核算</button>
         </div>
@@ -71,14 +65,11 @@
             const key = document.getElementById('apiKey').value;
             const market = document.getElementById('marketType').value;
             const odds = parseFloat(document.getElementById('odds').value);
-            const rA = RATINGS[document.getElementById('teamA').value], rB = RATINGS[document.getElementById('teamB').value];
+            const teamA = document.getElementById('teamA').value;
+            const teamB = document.getElementById('teamB').value;
             
-            // --- 逻辑控制区 ---
-            const homeBonus = 0; // 设置为 0 即关闭主场优势，改为 0.1 可微调主场加成
-            const lambda = 1.35 + ((rA - rB) / 400) + homeBonus; 
-            const mu = 1.35 + ((rB - rA) / 400);
-            // ------------------
-
+            const rA = RATINGS[teamA], rB = RATINGS[teamB];
+            const lambda = 1.35 + ((rA - rB) / 400), mu = 1.35 + ((rB - rA) / 400);
             const fact = n => n <= 1 ? 1 : n * fact(n - 1);
             const pA = (k, l) => (Math.exp(-l) * Math.pow(l, k)) / fact(k);
             
@@ -92,8 +83,8 @@
                 }
             }
 
-            // 修改了提示词，强制要求 AI 给出长篇专业分析
-            let aiRes = {correction: 0, reason: "正在深度核算数据模型..."};
+            // 增强版 AI 调用，强制返回详尽分析
+            let aiRes = {correction: 0, reason: "正在构建深度分析模型..."};
             try {
                 const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
                     method: "POST", 
@@ -102,22 +93,23 @@
                         model: "deepseek-chat", 
                         messages: [{
                             role: "user", 
-                            content: `你是一个资深足球盘口分析师。请针对 ${document.getElementById('teamA').value} 对阵 ${document.getElementById('teamB').value} 的比赛进行多维度深度分析（包含战意、近期状态、风格克制等），字数不少于150字。返回JSON格式：{"correction": 0.05, "reason": "你的详细理由..."}`
+                            content: `分析 ${TEAM_NAMES[teamA]} 对阵 ${TEAM_NAMES[teamB]} 的比赛。请从近期状态、战术风格、战意三个维度进行深度分析，字数严格不少于200字，禁止废话。必须返回完全符合 JSON 格式的数据：{"correction": 0.05, "reason": "在此处写入详细的分析报告，确保文本不含换行符，是一条完整的长文本"}`
                         }]
                     })
                 });
                 const d = await response.json();
-                let content = d.choices[0].message.content.replace(/```json/g, "").replace(/```/g, "").trim();
+                // 清理可能导致 JSON 解析失败的换行符
+                let content = d.choices[0].message.content.replace(/```json/g, "").replace(/```/g, "").replace(/\n/g, "").trim();
                 aiRes = JSON.parse(content);
-            } catch(e) { aiRes = {correction: 0, reason: "AI API连接失败，请检查Key有效性"}; }
+            } catch(e) { aiRes = {correction: 0, reason: "分析模型响应超时或 Key 无效，已切换至纯数学模型模式。"}; }
             
             const ev = ((winProb + aiRes.correction) * odds) - 1;
             document.getElementById('output').innerText = (ev > 0 ? "+" : "") + (ev*100).toFixed(2) + "%";
             document.getElementById('aiReason').innerText = aiRes.reason;
             document.getElementById('verdict').innerText = ev > 0 ? "✅ 建仓建议" : "🚫 避险建议";
-            document.getElementById('verdict').className = ev > 0 ? "text-emerald-400 border border-emerald-900" : "text-rose-400 border border-rose-900";
+            document.getElementById('verdict').className = ev > 0 ? "text-emerald-400 border-emerald-900 border" : "text-rose-400 border-rose-900 border";
             
-            btn.innerText = "执行精密核算"; btn.disabled = false;
+            btn.innerText = "开始核算"; btn.disabled = false;
             switchScreen('result');
         }
     </script>
