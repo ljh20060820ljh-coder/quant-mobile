@@ -66,14 +66,19 @@
 
         async function runTerminal() {
             const btn = document.getElementById('calcBtn');
-            btn.innerText = "Processing..."; btn.disabled = true;
+            btn.innerText = "深入分析中..."; btn.disabled = true;
 
             const key = document.getElementById('apiKey').value;
             const market = document.getElementById('marketType').value;
             const odds = parseFloat(document.getElementById('odds').value);
             const rA = RATINGS[document.getElementById('teamA').value], rB = RATINGS[document.getElementById('teamB').value];
             
-            const lambda = 1.35 + ((rA - rB) / 400), mu = 1.35 + ((rB - rA) / 400);
+            // --- 逻辑控制区 ---
+            const homeBonus = 0; // 设置为 0 即关闭主场优势，改为 0.1 可微调主场加成
+            const lambda = 1.35 + ((rA - rB) / 400) + homeBonus; 
+            const mu = 1.35 + ((rB - rA) / 400);
+            // ------------------
+
             const fact = n => n <= 1 ? 1 : n * fact(n - 1);
             const pA = (k, l) => (Math.exp(-l) * Math.pow(l, k)) / fact(k);
             
@@ -87,26 +92,30 @@
                 }
             }
 
-            let aiRes = {correction: 0, reason: "模型自主核算中..."};
+            // 修改了提示词，强制要求 AI 给出长篇专业分析
+            let aiRes = {correction: 0, reason: "正在深度核算数据模型..."};
             try {
                 const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
                     method: "POST", 
                     headers: {"Content-Type":"application/json", "Authorization": `Bearer ${key}`},
                     body: JSON.stringify({
                         model: "deepseek-chat", 
-                        messages: [{role: "user", content: "分析足球比赛胜负，返回JSON：{'correction': 0.05, 'reason': '简洁原因'}"}]
+                        messages: [{
+                            role: "user", 
+                            content: `你是一个资深足球盘口分析师。请针对 ${document.getElementById('teamA').value} 对阵 ${document.getElementById('teamB').value} 的比赛进行多维度深度分析（包含战意、近期状态、风格克制等），字数不少于150字。返回JSON格式：{"correction": 0.05, "reason": "你的详细理由..."}`
+                        }]
                     })
                 });
                 const d = await response.json();
                 let content = d.choices[0].message.content.replace(/```json/g, "").replace(/```/g, "").trim();
                 aiRes = JSON.parse(content);
-            } catch(e) { aiRes = {correction: 0, reason: "AI接口响应异常，请检查网络或Key"}; }
+            } catch(e) { aiRes = {correction: 0, reason: "AI API连接失败，请检查Key有效性"}; }
             
             const ev = ((winProb + aiRes.correction) * odds) - 1;
             document.getElementById('output').innerText = (ev > 0 ? "+" : "") + (ev*100).toFixed(2) + "%";
             document.getElementById('aiReason').innerText = aiRes.reason;
             document.getElementById('verdict').innerText = ev > 0 ? "✅ 建仓建议" : "🚫 避险建议";
-            document.getElementById('verdict').className = ev > 0 ? "text-emerald-400 border-emerald-900" : "text-rose-400 border-rose-900";
+            document.getElementById('verdict').className = ev > 0 ? "text-emerald-400 border border-emerald-900" : "text-rose-400 border border-rose-900";
             
             btn.innerText = "执行精密核算"; btn.disabled = false;
             switchScreen('result');
