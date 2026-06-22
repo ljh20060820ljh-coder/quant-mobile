@@ -7,54 +7,45 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { 
-            background: linear-gradient(rgba(0, 30, 0, 0.9), rgba(0, 0, 0, 0.95)), 
-                        url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2000'); 
-            background-size: cover; background-attachment: fixed; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at top right, #064e3b, #020617);
+            font-family: 'Segoe UI', system-ui, sans-serif;
         }
-        .glass { background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(20px); border: 1px solid #10b981; }
-        .gold-text { color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.5); }
+        .glass { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px); border: 1px solid #10b981; }
+        .gold-glow { color: #fbbf24; text-shadow: 0 0 15px rgba(251, 191, 36, 0.4); }
+        .emerald-glow { color: #10b981; text-shadow: 0 0 10px rgba(16, 185, 129, 0.3); }
     </style>
 </head>
-<body class="text-slate-100 min-h-screen p-4 flex flex-col items-center justify-center">
+<body class="text-slate-100 min-h-screen flex flex-col items-center p-4">
 
     <div id="inputScreen" class="w-full max-w-sm space-y-6">
-        <div class="text-center">
-            <h1 class="text-4xl font-black italic gold-text">ELITE TERMINAL</h1>
-            <p class="text-emerald-500 font-bold tracking-widest uppercase text-xs mt-2">v10.0 Professional Edition</p>
+        <div class="text-center pt-8">
+            <h1 class="text-4xl font-black italic gold-glow">⚽ PRO TERMINAL</h1>
+            <p class="text-emerald-500 font-bold tracking-widest text-xs mt-2">FINANCIAL QUANT SYSTEM</p>
         </div>
 
-        <div class="glass p-6 rounded-3xl shadow-2xl space-y-4 border border-emerald-800">
-            <input type="password" id="apiKey" placeholder="🔑 输入 API Key" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 focus:border-emerald-500 outline-none text-sm">
-            
+        <div class="glass p-6 rounded-3xl shadow-2xl space-y-4">
+            <input type="password" id="apiKey" placeholder="🔑 API Key" class="w-full bg-slate-900/50 p-3 rounded-xl border border-slate-700 text-sm focus:border-emerald-500 outline-none">
             <div class="grid grid-cols-2 gap-2">
-                <select id="teamA" class="bg-slate-900 p-3 rounded-xl border border-slate-700 text-sm"></select>
-                <select id="teamB" class="bg-slate-900 p-3 rounded-xl border border-slate-700 text-sm"></select>
+                <select id="teamA" class="bg-slate-900/50 p-3 rounded-xl border border-slate-700 text-sm"></select>
+                <select id="teamB" class="bg-slate-900/50 p-3 rounded-xl border border-slate-700 text-sm"></select>
             </div>
             
-            <select id="marketType" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-sm">
-                <optgroup label="全场独赢 (1x2)">
-                    <option value="1x2_home">主胜</option><option value="1x2_draw">和局</option><option value="1x2_away">客胜</option>
-                </optgroup>
-                <optgroup label="让球/大小 (AH/OU)">
-                    <option value="ah_-0.5">让球 [-0.5]</option><option value="ah_-1.0">让球 [-1.0]</option><option value="ou_2.5_over">大小 [大 2.5]</option>
-                </optgroup>
-                <optgroup label="波胆组合">
-                    <option value="score_1_0">主胜波胆 [1-0, 2-0, 2-1, 3-0]</option>
-                    <option value="score_0_1">客胜波胆 [0-1, 0-2, 1-2, 0-3]</option>
-                </optgroup>
+            <select id="marketType" class="w-full bg-slate-900/50 p-3 rounded-xl border border-slate-700 text-sm">
+                <option value="1x2_home">全场主胜</option>
+                <option value="ah_-1.0">让球盘 [-1.0]</option>
+                <option value="ou_2.5_over">大小盘 [大 2.5]</option>
             </select>
             
-            <input type="number" id="odds" step="0.01" placeholder="💰 实时赔率" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 font-bold text-lg text-amber-400">
-            <button onclick="runTerminal()" id="calcBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 p-4 rounded-xl font-black text-white shadow-lg transition transform active:scale-95">开始核算</button>
+            <input type="number" id="odds" step="0.01" placeholder="💰 赔率" class="w-full bg-slate-900/50 p-3 rounded-xl border border-slate-700 font-bold text-lg text-amber-400">
+            <button onclick="runTerminal()" id="calcBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 p-4 rounded-xl font-black text-white shadow-lg transition active:scale-95">执行精密核算</button>
         </div>
     </div>
 
     <div id="resultScreen" class="hidden w-full max-w-sm space-y-4 animate-in zoom-in duration-300">
-        <div class="glass p-8 rounded-3xl text-center shadow-2xl border border-emerald-800">
-            <div class="text-emerald-500 font-bold text-xs uppercase mb-2">Quant Analysis Report</div>
-            <div id="output" class="text-5xl font-black text-white my-4"></div>
-            <div id="aiReason" class="text-sm text-slate-400 italic mb-6 bg-slate-900/50 p-4 rounded-xl border border-slate-800"></div>
+        <div class="glass p-8 rounded-3xl text-center border border-emerald-900/50">
+            <div class="text-amber-500 font-bold text-xs uppercase mb-2 tracking-widest">💰 Expected Return</div>
+            <div id="output" class="text-6xl font-black text-white my-4 emerald-glow"></div>
+            <div id="aiReason" class="text-sm text-slate-400 italic mb-6 bg-black/30 p-4 rounded-xl border border-slate-800"></div>
             <div id="verdict" class="text-2xl font-black p-4 rounded-2xl border border-slate-700"></div>
             <button onclick="switchScreen('input')" class="w-full mt-6 p-4 rounded-xl bg-slate-800 hover:bg-slate-700 transition">返回重新核算</button>
         </div>
@@ -62,9 +53,8 @@
 
     <script>
         const RATINGS = {"argentina":1976,"france":2009,"spain":2010,"brazil":1955,"england":1993,"portugal":1945,"netherlands":1894,"germany":1926,"belgium":1878,"italy":1901,"colombia":1878,"uruguay":1831,"croatia":1852,"morocco":1874,"switzerland":1812,"usa":1826,"mexico":1834,"japan":1825,"senegal":1848,"denmark":1795,"ecuador":1829,"australia":1772,"south-korea":1760,"iran":1747,"poland":1731,"canada":1740,"serbia":1714,"wales":1688,"ghana":1659,"tunisia":1680,"ivory-coast":1732,"nigeria":1671,"saudi-arabia":1657,"qatar":1592,"egypt":1695,"algeria":1704,"scotland":1663,"cameroon":1633,"paraguay":1681,"venezuela":1625,"chile":1616,"peru":1612,"czech-republic":1651,"bosnia-and-herzegovina":1602,"south-africa":1591,"new-zealand":1591,"panama":1615,"jamaica":1514,"honduras":1497,"jordan":1548,"haiti":1537,"el-salvador":1438,"trinidad-and-tobago":1429,"guatemala":1416,"norway":1880,"sweden":1752,"turkey":1731,"austria":1718,"iraq":1599,"uzbekistan":1633,"cape-verde":1599,"dr-congo":1650,"curacao":1548};
-        const TEAM_NAMES = {"argentina":"阿根廷","france":"法国","spain":"西班牙","brazil":"巴西","england":"英格兰","portugal":"葡萄牙","netherlands":"荷兰","germany":"德国","belgium":"比利时","italy":"意大利","colombia":"哥伦比亚","uruguay":"乌拉圭","croatia":"克罗地亚","morocco":"摩洛哥","switzerland":"瑞士","usa":"美国","mexico":"墨西哥","japan":"日本","senegal":"塞内加尔","denmark":"丹麦","ecuador":"厄瓜多尔","australia":"澳大利亚","south-korea":"韩国","iran":"伊朗","poland":"波兰","canada":"加拿大","serbia":"塞尔维亚","wales":"威尔士","ghana":"加纳","tunisia":"突尼斯","ivory-coast":"科特迪瓦","nigeria":"尼日利亚","saudi-arabia":"沙特阿拉伯","qatar":"卡塔尔","egypt":"埃及","algeria":"阿尔及利亚","scotland":"苏格兰","cameroon":"喀麦隆","paraguay":"巴拉圭","venezuela":"委内瑞拉","chile":"智利","peru":"秘鲁","czech-republic":"捷克","bosnia-and-herzegovina":"波黑","south-africa":"南非","new-zealand":"新西兰","panama":"巴拿马","jamaica":"牙买加","honduras":"洪都拉斯","jordan":"约旦","haiti":"海地","el-salvador":"萨尔瓦多","trinidad-and-tobago":"特立尼达和多巴哥","guatemala":"危地马拉","norway":"挪威","sweden":"瑞典","turkey":"土耳其","austria":"奥地利","iraq":"伊拉克","uzbekistan":"乌兹别克斯坦","cape-verde":"佛得角","dr-congo":"民主刚果","curacao":"库拉索"};
+        const TEAM_NAMES = {"argentina":"阿根廷","france":"法国","spain":"西班牙","brazil":"巴西","england":"英格兰","portugal":"葡萄牙","netherlands":"荷兰","germany":"德国","belgium":"比利时","italy":"意大利","colombia":"哥伦比亚","uruguay":"乌拉圭","croatia":"克罗地亚","morocco":"摩洛哥","switzerland":"瑞士","usa":"美国","mexico":"墨西哥","japan":"日本","senegal":"塞内加尔","denmark":"丹麦","ecuador":"厄瓜多尔","australia":"澳大利亚","south-korea":"韩国","iran":"伊朗","poland":"波兰","canada":"加拿大","serbia":"塞尔维亚","wales":"威尔士","ghana":"加纳","tunisia":"突尼斯","ivory-coast":"科特迪瓦","nigeria":"尼日利亚","saudi-arabia":"沙特阿拉伯","qatar":"卡塔尔","egypt":"埃及","algeria":"阿尔及利亚","scotland":"苏格兰","cameroon":"喀梅隆","paraguay":"巴拉圭","venezuela":"委内瑞拉","chile":"智利","peru":"秘鲁","czech-republic":"捷克","bosnia-and-herzegovina":"波黑","south-africa":"南非","new-zealand":"新西兰","panama":"巴拿马","jamaica":"牙买加","honduras":"洪都拉斯","jordan":"约旦","haiti":"海地","el-salvador":"萨尔瓦多","trinidad-and-tobago":"特立尼达和多巴哥","guatemala":"危地马拉","norway":"挪威","sweden":"瑞典","turkey":"土耳其","austria":"奥地利","iraq":"伊拉克","uzbekistan":"乌兹别克斯坦","cape-verde":"佛得角","dr-congo":"民主刚果","curacao":"库拉索"};
 
-        // 初始化
         document.querySelectorAll('select').forEach(s => { if(s.id !== 'marketType') Object.keys(RATINGS).sort().forEach(t => s.innerHTML += `<option value="${t}">${TEAM_NAMES[t]}</option>`); });
         document.getElementById('apiKey').value = localStorage.getItem('DS_KEY') || '';
         document.getElementById('apiKey').oninput = (e) => localStorage.setItem('DS_KEY', e.target.value);
@@ -73,9 +63,10 @@
             document.getElementById('inputScreen').classList.toggle('hidden', to !== 'input');
             document.getElementById('resultScreen').classList.toggle('hidden', to !== 'result');
         }
-async function runTerminal() {
+
+        async function runTerminal() {
             const btn = document.getElementById('calcBtn');
-            btn.innerText = "分析中..."; btn.disabled = true;
+            btn.innerText = "Processing..."; btn.disabled = true;
 
             const key = document.getElementById('apiKey').value;
             const market = document.getElementById('marketType').value;
@@ -86,48 +77,40 @@ async function runTerminal() {
             const fact = n => n <= 1 ? 1 : n * fact(n - 1);
             const pA = (k, l) => (Math.exp(-l) * Math.pow(l, k)) / fact(k);
             
-            let winProb = 0, pushProb = 0;
+            let winProb = 0;
             for (let a = 0; a <= 6; a++) {
                 for (let b = 0; b <= 6; b++) {
                     const p = pA(a, lambda) * pA(b, mu);
                     if (market === '1x2_home' && a > b) winProb += p;
-                    else if (market === '1x2_draw' && a === b) winProb += p;
-                    else if (market === '1x2_away' && a < b) winProb += p;
-                    else if (market === 'ah_-0.5' && a > b) winProb += p;
                     else if (market === 'ah_-1.0' && a - b > 1) winProb += p;
-                    else if (market === 'ah_-1.0' && a - b === 1) pushProb += p;
                     else if (market === 'ou_2.5_over' && a + b > 2.5) winProb += p;
-                    else if (market === 'ou_2.5_under' && a + b < 2.5) winProb += p;
-                    else if (market === 'score_1_0' && (a==1&&b==0 || a==2&&b==0 || a==2&&b==1 || a==3&&b==0)) winProb += p;
-                    else if (market === 'score_0_1' && (a==0&&b==1 || a==0&&b==2 || a==1&&b==2 || a==0&&b==3)) winProb += p;
                 }
             }
 
-            // 获取 AI 深度分析 (增强解析版)
-            let aiRes = {correction: 0, reason: "模型运行正常"};
+            let aiRes = {correction: 0, reason: "模型自主核算中..."};
             try {
-                const response = await fetch("[https://api.deepseek.com/v1/chat/completions](https://api.deepseek.com/v1/chat/completions)", {
-                    method: "POST", headers: {"Content-Type":"application/json", "Authorization": `Bearer ${key}`},
+                const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
+                    method: "POST", 
+                    headers: {"Content-Type":"application/json", "Authorization": `Bearer ${key}`},
                     body: JSON.stringify({
                         model: "deepseek-chat", 
-                        messages: [{role: "user", content: "分析足球比赛情报，只返回一段JSON：{'correction': 0.05, 'reason': '简洁原因'}"}]
+                        messages: [{role: "user", content: "分析足球比赛胜负，返回JSON：{'correction': 0.05, 'reason': '简洁原因'}"}]
                     })
                 });
                 const d = await response.json();
                 let content = d.choices[0].message.content.replace(/```json/g, "").replace(/```/g, "").trim();
                 aiRes = JSON.parse(content);
-            } catch(e) { console.error(e); aiRes = {correction: 0, reason: "AI接口连接失败，请检查API Key"}; }
+            } catch(e) { aiRes = {correction: 0, reason: "AI接口响应异常，请检查网络或Key"}; }
             
-            const ev = ((winProb + aiRes.correction) * odds) + (pushProb * 1.0) - 1;
+            const ev = ((winProb + aiRes.correction) * odds) - 1;
             document.getElementById('output').innerText = (ev > 0 ? "+" : "") + (ev*100).toFixed(2) + "%";
             document.getElementById('aiReason').innerText = aiRes.reason;
-            document.getElementById('verdict').innerText = ev > 0 ? "✅ 建议建仓" : "🚫 建议避险";
-            document.getElementById('verdict').className = ev > 0 ? "text-emerald-400 p-4 border border-emerald-900" : "text-rose-400 p-4 border border-rose-900";
+            document.getElementById('verdict').innerText = ev > 0 ? "✅ 建仓建议" : "🚫 避险建议";
+            document.getElementById('verdict').className = ev > 0 ? "text-emerald-400 border-emerald-900" : "text-rose-400 border-rose-900";
             
-            btn.innerText = "开始核算"; btn.disabled = false;
+            btn.innerText = "执行精密核算"; btn.disabled = false;
             switchScreen('result');
         }
-       
     </script>
 </body>
 </html>
